@@ -1254,7 +1254,18 @@ where
                 );
                 let assigned_values = assigned_values.iter().map(|v| {
                     v.values[0..unusable_rows_start].to_vec()
-                }).flatten().collect::<Vec<_>>();
+                }).collect::<Vec<_>>();
+
+                // let values = vec![];
+                // for row in 0..assigned_values.len() {
+                //     for column in 0..assigned_values[row].len() {
+                //         values.push(assigned_values[row][column]);
+                //     }
+                // }
+
+                let assigned_values = (0..assigned_values[0].len())
+                .flat_map(|col| assigned_values.iter().map(move |row| row[col]))
+                .collect::<Vec<_>>();
 
                 let assigned_values = commitment_tuples.clone().into_iter().map(|(start, len)| {
                     Polynomial::new_lagrange_from_vec(assigned_values[start..start + len].to_vec())
