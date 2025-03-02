@@ -466,11 +466,11 @@ fn permute_expression_pair<'params, C: CurveAffine, P: Params<'params, C>, R: Rn
         );
     }*/
     #[cfg(not(target_arch = "wasm32"))]
-    let start = instant::Instant::now();
+    // let start = instant::Instant::now();
     let res =
         permute_expression_pair_par(pk, params, domain, rng, input_expression, table_expression);
     #[cfg(not(target_arch = "wasm32"))]
-    dbg!(start.elapsed());
+    // dbg!(start.elapsed());
     res
 }
 
