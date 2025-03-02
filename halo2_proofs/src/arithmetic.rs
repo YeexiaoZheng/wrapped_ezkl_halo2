@@ -124,7 +124,7 @@ pub fn best_fft_gpu<Scalar: Field + ff::PrimeField, G: FftGroup<Scalar> + ff::Pr
     log_n: u32,
     inverse: bool,
 ) {
-    println!("icicle_fft");
+    // println!("icicle_fft");
     icicle::fft_on_device::<Scalar, G>(a, omega, log_n, inverse);
 }
 
