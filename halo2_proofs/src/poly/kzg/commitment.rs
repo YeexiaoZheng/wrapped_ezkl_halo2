@@ -316,6 +316,7 @@ where
         scalars.extend(poly.iter());
         let bases = &self.g_lagrange;
         let size = scalars.len();
+        // println!("base: {} size: {}", bases.len(), size);
         assert!(bases.len() >= size);
 
         best_multiexp(&scalars, &bases[0..size])

@@ -1,6 +1,7 @@
 use ff::{Field, FromUniformBytes, WithSmallOrderMulGroup};
 use group::Curve;
 use instant::Instant;
+use maybe_rayon::iter::{IntoParallelIterator, ParallelIterator};
 use rand_core::RngCore;
 use rustc_hash::FxBuildHasher;
 use rustc_hash::FxHashMap as HashMap;
@@ -29,6 +30,7 @@ use super::mv_lookup as lookup;
 #[cfg(feature = "mv-lookup")]
 use maybe_rayon::iter::{IntoParallelIterator, IntoParallelRefIterator};
 
+use crate::merkle::merkle_hash;
 use crate::{
     arithmetic::{eval_polynomial, CurveAffine},
     circuit::Value,
@@ -923,7 +925,7 @@ pub fn create_wrapped_proof<
     transcript: &mut T,
     assigned_column_size: usize,
     commitment_tuples: Vec<(usize, usize)>,
-) -> Result<Vec<<Scheme as CommitmentScheme>::Curve>, Error>
+) -> Result<Vec<[u8; 32]>, Error>
 where
     Scheme::Scalar: WithSmallOrderMulGroup<3> + FromUniformBytes<64>,
     Scheme::ParamsProver: Send + Sync,
@@ -1263,25 +1265,41 @@ where
                 //     }
                 // }
 
+                // let start = Instant::now();
+
                 let assigned_values = (0..assigned_values[0].len())
                 .flat_map(|col| assigned_values.iter().map(move |row| row[col]))
                 .collect::<Vec<_>>();
 
+                // println!("commitment_tuples: {:?}", commitment_tuples);
+                // println!("assigned_values: {:?}", assigned_values.len());
+
                 let assigned_values = commitment_tuples.clone().into_iter().map(|(start, len)| {
-                    Polynomial::new_lagrange_from_vec(assigned_values[start..start + len].to_vec())
+                    assigned_values[start..start + len].to_vec()
                 }).collect::<Vec<_>>();
 
-                let assigned_commitments_projective: Vec<_> = assigned_values
-                    .iter()
-                    .map(|poly| params.commit_lagrange(poly, Blind::default()))
-                    .collect();
-                let mut assigned_commitments =
-                    vec![Scheme::Curve::identity(); assigned_commitments_projective.len()];
-                <Scheme::Curve as CurveAffine>::CurveExt::batch_normalize(
-                    &assigned_commitments_projective,
-                    &mut assigned_commitments,
-                );
-                commitments = assigned_commitments;
+                commitments = assigned_values.clone().into_par_iter().map(|values| {
+                    merkle_hash(values)
+                }).collect::<Vec<_>>();
+
+                // println!("commitments cost: {:?}", start.elapsed());
+
+
+                // let assigned_values = commitment_tuples.clone().into_iter().map(|(start, len)| {
+                //     Polynomial::new_lagrange_from_vec(assigned_values[start..start + len].to_vec())
+                // }).collect::<Vec<_>>();
+
+                // let assigned_commitments_projective: Vec<_> = assigned_values
+                //     .iter()
+                //     .map(|poly| params.commit_lagrange(poly, Blind::default()))
+                //     .collect();
+                // let mut assigned_commitments =
+                //     vec![Scheme::Curve::identity(); assigned_commitments_projective.len()];
+                // <Scheme::Curve as CurveAffine>::CurveExt::batch_normalize(
+                //     &assigned_commitments_projective,
+                //     &mut assigned_commitments,
+                // );
+                // commitments = assigned_commitments;
                 // println!("assigned_commitments: {:?}", assigned_commitments);
 
                 let mut advice_values = batch_invert_assigned::<Scheme::Scalar>(
