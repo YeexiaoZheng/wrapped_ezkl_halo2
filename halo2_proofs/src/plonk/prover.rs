@@ -20,7 +20,7 @@ use super::{
     ChallengeY, Error, ProvingKey,
 };
 #[cfg(feature = "mv-lookup")]
-use maybe_rayon::iter::{IndexedParallelIterator, ParallelIterator};
+use maybe_rayon::iter::IndexedParallelIterator;
 
 #[cfg(not(feature = "mv-lookup"))]
 use super::lookup;
@@ -28,7 +28,7 @@ use super::lookup;
 use super::mv_lookup as lookup;
 
 #[cfg(feature = "mv-lookup")]
-use maybe_rayon::iter::{IntoParallelIterator, IntoParallelRefIterator};
+use maybe_rayon::iter::IntoParallelRefIterator;
 
 use crate::merkle::merkle_hash;
 use crate::{
