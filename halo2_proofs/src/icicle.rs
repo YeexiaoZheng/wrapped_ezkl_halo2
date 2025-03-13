@@ -103,10 +103,13 @@ pub fn fft_on_device<Scalar: ff::PrimeField, G: FftGroup<Scalar> + ff::PrimeFiel
     _log_n: u32, 
     inverse: bool
 ) {
-    let cfg = NTTConfig::<'_, ScalarField>::default();
+    let mut cfg = NTTConfig::<'_, ScalarField>::default();
+    cfg.batch_size = 16 as i32;
+    cfg.columns_batch = true;
     let dir = if inverse { NTTDir::kInverse } else { NTTDir::kForward };
 
     let omega = icicle_scalars_from_c_scalars(&[omega]);
+    // println!("omega: {:?}", omega);
     initialize_domain(omega[0], &cfg.ctx, true).unwrap();
 
     let mut icicle_scalars: Vec<ScalarField> = icicle_scalars_from_c_scalars(scalars);
