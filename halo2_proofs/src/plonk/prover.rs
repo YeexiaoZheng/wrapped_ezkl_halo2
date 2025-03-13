@@ -1279,7 +1279,12 @@ where
                 }).collect::<Vec<_>>();
 
                 commitments = assigned_values.clone().into_par_iter().map(|values| {
-                    merkle_hash(values)
+                    if values.len() > 0 {
+                        merkle_hash(values)
+                    } else {
+                        [0u8; 32]
+                    }
+                    
                 }).collect::<Vec<_>>();
 
                 // println!("commitments cost: {:?}", start.elapsed());
